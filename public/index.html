@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LAN Secure Voting Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .glass {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col justify-between">
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 px-6 py-4 glass sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i class="fa-solid fa-check-to-slot text-white text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg tracking-tight text-white">LAN E-Vote</h1>
+          <p class="text-xs text-slate-400 font-mono">Cryptographically Guarded</p>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-4 text-sm font-medium">
+        <a href="/projector" target="_blank" class="text-slate-400 hover:text-amber-400 transition flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-amber-500/30">
+          <i class="fa-solid fa-display text-xs"></i>
+          <span>Live Projector</span>
+        </a>
+        <a href="/admin/login" class="text-slate-400 hover:text-indigo-400 transition flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-indigo-500/30">
+          <i class="fa-solid fa-shield-halved text-xs"></i>
+          <span>Admin</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Hero -->
+  <main class="max-w-4xl mx-auto px-6 py-12 flex-1 flex flex-col justify-center items-center text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-6">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      Local Network Ballot Station Ready
+    </div>
+
+    <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight max-w-2xl mb-4">
+      Secure, One-Person One-Vote Network Election
+    </h1>
+    <p class="text-slate-400 max-w-xl text-base sm:text-lg mb-8 leading-relaxed">
+      Register your voter account to obtain a unique 16-character cryptographic activation token. Present your token to the election administrator to unlock your ballot booth.
+    </p>
+
+    <!-- Action Cards -->
+    <div class="grid sm:grid-cols-2 gap-5 w-full max-w-xl">
+      <a href="/register" class="glass p-6 rounded-2xl hover:border-indigo-500/50 hover:bg-slate-900/80 transition-all text-left group">
+        <div class="w-12 h-12 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-xl mb-4 group-hover:scale-105 transition-transform">
+          <i class="fa-solid fa-user-plus"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1 group-hover:text-indigo-400 transition-colors">1. Register New Voter</h3>
+        <p class="text-sm text-slate-400">Create credentials and generate your 16-char verification hex token.</p>
+      </a>
+
+      <a href="/login" class="glass p-6 rounded-2xl hover:border-sky-500/50 hover:bg-slate-900/80 transition-all text-left group">
+        <div class="w-12 h-12 rounded-xl bg-sky-600/20 text-sky-400 flex items-center justify-center text-xl mb-4 group-hover:scale-105 transition-transform">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1 group-hover:text-sky-400 transition-colors">2. Enter Voting Booth</h3>
+        <p class="text-sm text-slate-400">Already registered or activated? Sign in to cast your private ballot.</p>
+      </a>
+    </div>
+
+    <!-- Security Badges -->
+    <div class="mt-12 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 border-t border-slate-900 pt-8 w-full max-w-xl">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-lock text-indigo-400"></i>
+        <span>Anonymous Ballot Box</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-fingerprint text-emerald-400"></i>
+        <span>Anti-Replay Locking</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-bolt text-amber-400"></i>
+        <span>Sub-100ms Live Telemetry</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 py-4 px-6 text-center text-xs text-slate-400">
+    Air-Gapped / LAN Voting System &bull; Single-Device Enforced &bull; Zero Cloud Dependency
+  </footer>
+</body>
+</html>

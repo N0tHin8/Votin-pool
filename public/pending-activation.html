@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pending Activation - LAN E-Vote</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .glass {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="h-full flex items-center justify-center p-4">
+  <div class="w-full max-w-md glass rounded-3xl p-8 text-center border-amber-500/30 shadow-2xl relative">
+    <div class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 mx-auto flex items-center justify-center text-3xl mb-5 shadow-lg shadow-amber-500/10">
+      <i class="fa-solid fa-hourglass-half animate-pulse"></i>
+    </div>
+
+    <h2 class="text-2xl font-black text-white tracking-tight mb-2">Activation Pending</h2>
+    <p class="text-xs text-slate-400 leading-relaxed mb-6">
+      Your account is created, but your ballot booth is locked until the election administrator verifies your identity and activates your token.
+    </p>
+
+    <div class="bg-slate-900 border-2 border-amber-500/40 rounded-2xl p-4 mb-6">
+      <div class="text-[10px] uppercase font-mono tracking-widest text-amber-400 mb-1">Your Verification Token</div>
+      <div id="tokenDisplay" class="text-2xl font-mono font-black text-amber-300 tracking-wider select-all">Loading...</div>
+    </div>
+
+    <p class="text-[11px] text-slate-400 mb-6">
+      Show this 16-character code to the admin. As soon as the admin activates it, this screen will automatically refresh into your voting booth.
+    </p>
+
+    <div class="space-y-3">
+      <button id="checkStatusBtn" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl text-sm transition shadow-lg">
+        Check Activation Status
+      </button>
+
+      <button id="logoutBtn" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-medium rounded-xl text-xs border border-slate-700/80 transition">
+        Sign Out
+      </button>
+    </div>
+  </div>
+
+  <script>
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/user/status');
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+        const data = await res.json();
+        document.getElementById('tokenDisplay').innerText = data.hex_token || 'UNKNOWN';
+
+        if (data.status === 'ACTIVATED') {
+          window.location.href = '/vote';
+        } else if (data.status === 'VOTED') {
+          window.location.href = '/voted-already';
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Auto-poll every 3 seconds for instant gratification when admin approves
+    setInterval(checkStatus, 3000);
+    checkStatus();
+
+    document.getElementById('checkStatusBtn').addEventListener('click', checkStatus);
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login';
+    });
+  </script>
+</body>
+</html>

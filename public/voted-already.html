@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Vote Already Cast - LAN E-Vote</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .glass {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="h-full flex items-center justify-center p-4">
+  <div class="w-full max-w-md glass rounded-3xl p-8 text-center border-emerald-500/30 shadow-2xl relative overflow-hidden">
+    <!-- Top accent bar -->
+    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500"></div>
+
+    <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-3xl mb-5 shadow-lg shadow-emerald-500/10">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+
+    <h2 class="text-2xl font-black text-white tracking-tight mb-2">Vote Already Cast</h2>
+    <p class="text-xs text-slate-400 leading-relaxed mb-6">
+      Your ballot has been cryptographically recorded in the decentralized local tally and your voting token has been permanently retired.
+    </p>
+
+    <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 text-left space-y-2 mb-6 text-xs text-slate-300">
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400">Integrity Status:</span>
+        <span class="text-emerald-400 font-semibold font-mono">SEALED & COMMITTED</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400">Re-Voting Status:</span>
+        <span class="text-rose-400 font-semibold font-mono">STRICTLY BLOCKED</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400">Session Guard:</span>
+        <span class="text-sky-400 font-mono">CACHE PURGED</span>
+      </div>
+    </div>
+
+    <div class="space-y-3">
+      <a href="/projector" target="_blank"
+        class="block w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-display text-xs"></i>
+        <span>Watch Live Projector Tally</span>
+      </a>
+
+      <button id="logoutBtn"
+        class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-medium rounded-xl text-xs border border-slate-700/80 transition">
+        Sign Out / Finish Session
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Invalidate browser back forward cache
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login';
+    });
+  </script>
+</body>
+</html>

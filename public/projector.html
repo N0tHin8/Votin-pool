@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100 select-none overflow-x-hidden">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Election Telemetry - Projector Display</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    .glass {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .tally-bar {
+      transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.98); }
+    }
+    .pulse-counter {
+      animation: pulse-subtle 0.6s ease-out;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col justify-between p-6 sm:p-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
+
+  <!-- Projector Header -->
+  <header class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white text-2xl shadow-xl shadow-indigo-500/20">
+        <i class="fa-solid fa-square-poll-vertical"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">LIVE ELECTION RESULTS</h1>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold uppercase tracking-wider">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            LIVE TELEMETRY
+          </span>
+        </div>
+        <p class="text-xs sm:text-sm text-slate-400 font-mono mt-0.5">Secure LAN Voting Precinct &bull; Zero Cloud Dependency &bull; Real-time Broadcast</p>
+      </div>
+    </div>
+
+    <!-- Aggregate Counter Banner -->
+    <div class="flex items-center gap-6 glass px-6 py-3 rounded-2xl border border-slate-800">
+      <div class="text-right">
+        <div class="text-[11px] uppercase tracking-wider text-slate-400 font-mono">Total Ballots Cast</div>
+        <div id="totalVotes" class="text-3xl sm:text-4xl font-mono font-black text-white">0</div>
+      </div>
+      <div class="w-px h-10 bg-slate-800"></div>
+      <div class="text-right">
+        <div class="text-[11px] uppercase tracking-wider text-slate-400 font-mono">Precinct Turnout</div>
+        <div id="turnoutRate" class="text-3xl sm:text-4xl font-mono font-black text-amber-300">0%</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Real-Time Candidate Visualization Grid -->
+  <main class="flex-1 my-8 max-w-7xl mx-auto w-full flex flex-col justify-center">
+    <div id="candidatesBoard" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="col-span-full py-16 text-center text-slate-500">
+        <i class="fa-solid fa-spinner animate-spin text-3xl mb-3"></i>
+        <p class="text-lg">Synchronizing with cryptographic ballot box...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Projector Footer / Telemetry Status -->
+  <footer class="pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-400">
+    <div class="flex items-center gap-4">
+      <span class="flex items-center gap-2">
+        <span id="socketIndicator" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <span id="socketStatusText">WebSocket Connected</span>
+      </span>
+      <span>&bull;</span>
+      <span>Channel: <span class="text-indigo-400">lan:election:telemetry</span></span>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="toggleFullscreen()" class="px-3 py-1 rounded bg-slate-900 border border-slate-800 hover:text-white transition flex items-center gap-1.5">
+        <i class="fa-solid fa-expand"></i> Fullscreen
+      </button>
+      <span>Last sync: <span id="lastUpdated" class="text-slate-300">Just now</span></span>
+    </div>
+  </footer>
+
+  <script>
+    const socket = io();
+    const candidatesBoard = document.getElementById('candidatesBoard');
+    const totalVotesEl = document.getElementById('totalVotes');
+    const turnoutRateEl = document.getElementById('turnoutRate');
+    const socketIndicator = document.getElementById('socketIndicator');
+    const socketStatusText = document.getElementById('socketStatusText');
+    const lastUpdated = document.getElementById('lastUpdated');
+
+    let currentCandidates = [];
+    let tallyMap = {};
+    let totalEligible = 0;
+
+    socket.on('connect', () => {
+      socketIndicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+      socketStatusText.innerText = 'WebSocket Connected (LAN)';
+    });
+
+    socket.on('disconnect', () => {
+      socketIndicator.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse';
+      socketStatusText.innerText = 'Reconnecting Telemetry...';
+    });
+
+    // Listen for real-time atomic vote updates
+    socket.on('tally_update', (payload) => {
+      tallyMap = payload.tallies || {};
+      totalEligible = payload.totalEligible || 0;
+      updateVisuals();
+      triggerTallyAnimation();
+    });
+
+    // Listen for real-time candidate catalog changes (add, edit, delete)
+    socket.on('catalog_update', (candidates) => {
+      currentCandidates = candidates;
+      renderCandidateCards();
+      updateVisuals();
+    });
+
+    // Initial state fetch
+    async function initProjector() {
+      try {
+        const [candRes, tallyRes] = await Promise.all([
+          fetch('/api/candidates'),
+          fetch('/api/tally')
+        ]);
+        currentCandidates = await candRes.json();
+        const tallyData = await tallyRes.json();
+        tallyMap = tallyData.tallies || {};
+        totalEligible = tallyData.totalEligible || 0;
+
+        renderCandidateCards();
+        updateVisuals();
+      } catch (err) {
+        console.error('Failed to initialize projector:', err);
+      }
+    }
+
+    function renderCandidateCards() {
+      candidatesBoard.innerHTML = currentCandidates.map(c => `
+        <div id="card-${c.id}" class="glass rounded-3xl p-6 sm:p-8 border border-slate-800/80 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full font-mono"
+                  style="background-color: ${c.color_hex}15; color: ${c.color_hex}; border: 1px solid ${c.color_hex}30">
+                  ${escapeHtml(c.party || 'Independent')}
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-black text-white mt-2 tracking-tight">${escapeHtml(c.name)}</h2>
+                <p class="text-xs sm:text-sm text-slate-400 font-mono">${escapeHtml(c.role_title)}</p>
+              </div>
+
+              <div class="text-right">
+                <div id="count-${c.id}" class="text-4xl sm:text-5xl font-mono font-black text-white leading-none">0</div>
+                <div class="text-[11px] font-mono text-slate-400 mt-1 uppercase tracking-wider">Votes</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar & Percentage -->
+          <div class="mt-6 pt-4 border-t border-slate-800/60">
+            <div class="flex items-center justify-between text-sm font-mono mb-2">
+              <span class="text-xs text-slate-400">Share of Total</span>
+              <span id="percent-${c.id}" class="font-bold text-lg text-white">0.0%</span>
+            </div>
+
+            <div class="w-full h-4 sm:h-5 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
+              <div id="bar-${c.id}" class="tally-bar h-full rounded-full"
+                style="width: 0%; background: linear-gradient(90deg, ${c.color_hex}aa, ${c.color_hex});"></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateVisuals() {
+      let grandTotal = 0;
+      for (const cid in tallyMap) {
+        grandTotal += tallyMap[cid];
+      }
+
+      totalVotesEl.innerText = grandTotal.toLocaleString();
+      
+      const turnout = totalEligible > 0 ? ((grandTotal / totalEligible) * 100).toFixed(1) : 0;
+      turnoutRateEl.innerText = `${turnout}%`;
+
+      currentCandidates.forEach(c => {
+        const votes = tallyMap[c.id] || 0;
+        const countEl = document.getElementById(`count-${c.id}`);
+        const percentEl = document.getElementById(`percent-${c.id}`);
+        const barEl = document.getElementById(`bar-${c.id}`);
+
+        if (countEl && percentEl && barEl) {
+          countEl.innerText = votes.toLocaleString();
+          const pct = grandTotal > 0 ? ((votes / grandTotal) * 100).toFixed(1) : '0.0';
+          percentEl.innerText = `${pct}%`;
+          barEl.style.width = `${pct}%`;
+        }
+      });
+
+      lastUpdated.innerText = new Date().toLocaleTimeString();
+    }
+
+    function triggerTallyAnimation() {
+      totalVotesEl.classList.add('pulse-counter');
+      setTimeout(() => totalVotesEl.classList.remove('pulse-counter'), 600);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+    }
+
+    initProjector();
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "votin-pool",
+  "version": "1.0.0",
+  "description": "Votin-pool - Secure LAN Voting Platform with Cryptographic Hex Tokens & Live Telemetry",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3",
+    "express-session": "^1.19.0",
+    "socket.io": "^4.8.4"
+  }
+}
