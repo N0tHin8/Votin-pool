@@ -4,6 +4,9 @@
 
 Built with **Node.js (Express & Socket.io)** and **SQLite**. Zero cloud dependency. Engineered for college elections, student clubs, hackathons, and local governance events.
 
+**Author & Architect:** **Mayank Shriwastav**  
+**Repository:** [https://github.com/N0tHin8/Votin-pool](https://github.com/N0tHin8/Votin-pool)
+
 ---
 
 ## ⚡ Key Highlights & Architecture
@@ -14,7 +17,20 @@ Built with **Node.js (Express & Socket.io)** and **SQLite**. Zero cloud dependen
 - **Real-Time Projector Telemetry (`/projector`):** Dedicated full-screen responsive dashboard broadcasting live bar charts and percentages via Socket.io with zero page reloads.
 - **Candidate Roster Management:** Admins can add, edit, or delete candidates. Deleting candidates with cast votes is automatically blocked to prevent tally corruption.
 - **One-Click Safe Reset:** Clear all test ballots and registered users with a double-confirmation prompt without modifying candidate rosters.
+- **Admin Password Modification:** Easily change the admin password right from the Admin Console dashboard.
 - **Anti-Cache & Anti-Replay Session Guards:** HTTP `Cache-Control: no-store` and `pageshow` guards ensure hitting browser "Back", refreshing, or re-logging instantly directs voted users to a sealed lock screen.
+
+---
+
+## 🔑 Initial Administrator Credentials
+
+For maximum security on local networks, default admin credentials are **not displayed on the login screen or server boot console**.
+
+- **Default Username:** `admin`
+- **Default Password:** `admin123`
+
+> [!IMPORTANT]
+> **Change Default Password Immediately:** Once you log into the Admin Console (`/admin`), click the **Change Password** button in the top navigation bar to set your private password. Passwords are saved with salted `scrypt` hashing.
 
 ---
 
@@ -46,7 +62,7 @@ Local Access:        http://localhost:3000
 LAN Voter Access:    http://192.168.1.105:3000
 LAN Projector View:  http://192.168.1.105:3000/projector
 LAN Admin Dashboard: http://192.168.1.105:3000/admin
-Default Admin:       admin / admin123
+Security Notice:     Admin credentials managed via README & Admin Console.
 ========================================================
 ```
 

@@ -29,6 +29,9 @@
       </div>
 
       <div class="flex items-center gap-3">
+        <button id="changePassBtn" class="text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-indigo-500/20 transition">
+          <i class="fa-solid fa-key"></i> Change Password
+        </button>
         <button id="resetElectionBtn" class="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-rose-500/20 transition">
           <i class="fa-solid fa-triangle-exclamation"></i> Clear All Votes & Users
         </button>
@@ -228,6 +231,47 @@
           </button>
           <button type="submit" id="saveCandidateBtn" class="px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition shadow-lg shadow-sky-600/30">
             Save Candidate
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="passwordModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="glass rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-700/80 shadow-2xl relative">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h3 class="text-xl font-bold text-white">Change Admin Password</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Update credentials for this local server instance</p>
+        </div>
+        <button id="closePassModalBtn" class="text-slate-400 hover:text-white transition p-2">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="passModalError" class="hidden mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs"></div>
+      <div id="passModalSuccess" class="hidden mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs"></div>
+
+      <form id="passwordForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Current Password</label>
+          <input type="password" id="currentPass" required placeholder="••••••••"
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">New Password (min 6 chars)</label>
+          <input type="password" id="newPass" required placeholder="••••••••"
+            class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="pt-4 flex items-center justify-end gap-3">
+          <button type="button" id="cancelPassModalBtn" class="px-5 py-2.5 rounded-xl border border-slate-700 text-xs font-medium text-slate-300 hover:bg-slate-800 transition">
+            Cancel
+          </button>
+          <button type="submit" id="savePassBtn" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/30">
+            Update Password
           </button>
         </div>
       </form>
@@ -551,6 +595,64 @@
         loadLedger();
       } catch (err) {
         alert("Error: " + err.message);
+      }
+    });
+
+    // Change Password Modal Handling
+    const changePassBtn = document.getElementById('changePassBtn');
+    const passwordModal = document.getElementById('passwordModal');
+    const closePassModalBtn = document.getElementById('closePassModalBtn');
+    const cancelPassModalBtn = document.getElementById('cancelPassModalBtn');
+    const passwordForm = document.getElementById('passwordForm');
+    const currentPass = document.getElementById('currentPass');
+    const newPass = document.getElementById('newPass');
+    const passModalError = document.getElementById('passModalError');
+    const passModalSuccess = document.getElementById('passModalSuccess');
+    const savePassBtn = document.getElementById('savePassBtn');
+
+    changePassBtn.addEventListener('click', () => {
+      currentPass.value = '';
+      newPass.value = '';
+      passModalError.classList.add('hidden');
+      passModalSuccess.classList.add('hidden');
+      passwordModal.classList.remove('hidden');
+    });
+
+    function closePassModal() {
+      passwordModal.classList.add('hidden');
+    }
+    closePassModalBtn.addEventListener('click', closePassModal);
+    cancelPassModalBtn.addEventListener('click', closePassModal);
+
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      passModalError.classList.add('hidden');
+      passModalSuccess.classList.add('hidden');
+      savePassBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/admin/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            currentPassword: currentPass.value,
+            newPassword: newPass.value
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Password update failed.');
+
+        passModalSuccess.innerText = data.message;
+        passModalSuccess.classList.remove('hidden');
+        currentPass.value = '';
+        newPass.value = '';
+        setTimeout(closePassModal, 1500);
+      } catch (err) {
+        passModalError.innerText = err.message;
+        passModalError.classList.remove('hidden');
+      } finally {
+        savePassBtn.disabled = false;
       }
     });
 

@@ -279,6 +279,24 @@ app.post('/api/admin/logout', (req, res) => {
   res.json({ message: 'Admin logged out.' });
 });
 
+// Admin Change Password
+app.post('/api/admin/change-password', requireAdminAuth, (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword || newPassword.length < 6) {
+    return res.status(400).json({ message: 'Current password and new password (min 6 chars) are required.' });
+  }
+
+  const admin = db.prepare('SELECT * FROM admins WHERE id = ?').get(req.session.adminId);
+  if (!admin || !verifyPassword(currentPassword, admin.password_hash, admin.salt)) {
+    return res.status(401).json({ message: 'Current password is incorrect.' });
+  }
+
+  const { hash, salt } = hashPassword(newPassword);
+  db.prepare('UPDATE admins SET password_hash = ?, salt = ? WHERE id = ?').run(hash, salt, admin.id);
+
+  res.json({ message: 'Admin password successfully updated.' });
+});
+
 // List all voters for verification ledger
 app.get('/api/admin/voters', requireAdminAuth, (req, res) => {
   const voters = db.prepare(`
@@ -484,6 +502,6 @@ server.listen(PORT, '0.0.0.0', () => {
       console.log(`LAN Admin Dashboard: http://${ip}:${PORT}/admin`);
     });
   }
-  console.log(`Default Admin:       admin / admin123`);
+  console.log(`Security Notice:     Admin credentials managed via README & Admin Console.`);
   console.log(`========================================================\n`);
 });
